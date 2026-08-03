@@ -15,7 +15,7 @@ from resume_analyzer import analyze_resume
 from interview_generator import generate_interview_questions
 
 from speech_to_text import speech_to_text
-
+from streamlit_mic_recorder import mic_recorder
 
 # -----------------------------
 # Page Configuration
@@ -269,12 +269,26 @@ if st.session_state.interview:
 # Voice Input
 # -----------------------------
 
-st.header(
-    "🎤 Voice Question"
+
+
+audio = mic_recorder(
+    start_prompt="🎤 Start Recording",
+    stop_prompt="⏹ Stop Recording",
 )
 
+if audio:
 
-if st.button("Start Voice Input"):
+    text = speech_to_text(audio["bytes"])
+
+    st.write("You said:")
+
+    st.write(text)
+
+    if st.session_state.chatbot:
+
+        answer = st.session_state.chatbot.ask(text)
+
+        st.write(answer)
 
 
     with st.spinner("Listening..."):

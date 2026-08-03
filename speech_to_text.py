@@ -1,22 +1,14 @@
-import speech_recognition as sr
+import whisper
+import tempfile
 
+model = whisper.load_model("base")
 
-def speech_to_text():
+def speech_to_text(audio_bytes):
 
-    recognizer = sr.Recognizer()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
+        f.write(audio_bytes)
+        audio_path = f.name
 
-    with sr.Microphone() as source:
+    result = model.transcribe(audio_path)
 
-        print("Speak now...")
-
-        audio = recognizer.listen(source)
-
-    try:
-
-        text = recognizer.recognize_google(audio)
-
-        return text
-
-    except:
-
-        return ""
+    return result["text"]
