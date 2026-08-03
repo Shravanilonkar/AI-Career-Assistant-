@@ -1,5 +1,5 @@
 import streamlit as st
-
+from streamlit_mic_recorder import mic_recorder
 from file_handler import save_uploaded_file
 from document_processor import extract_document_text
 
@@ -271,12 +271,40 @@ if st.session_state.interview:
 
 
 
+st.header("🎤 Voice Question")
+
 audio = mic_recorder(
-    start_prompt="🎤 Start Recording",
-    stop_prompt="⏹ Stop Recording",
+
+    start_prompt="🎙️ Start Recording",
+
+    stop_prompt="⏹️ Stop Recording",
+
+    key="voice"
 )
 
 if audio:
+
+    with st.spinner("Transcribing..."):
+
+        voice_text = speech_to_text(
+            audio["bytes"]
+        )
+
+    st.success("Voice converted to text!")
+
+    st.write("You asked:")
+
+    st.write(voice_text)
+
+    if st.session_state.chatbot:
+
+        with st.spinner("Thinking..."):
+
+            answer = st.session_state.chatbot.ask(
+                voice_text
+            )
+
+        st.write(answer)
 
     text = speech_to_text(audio["bytes"])
 
