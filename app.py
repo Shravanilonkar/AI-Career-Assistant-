@@ -274,76 +274,45 @@ if st.session_state.interview:
 st.header("🎤 Voice Question")
 
 audio = mic_recorder(
-
     start_prompt="🎙️ Start Recording",
-
     stop_prompt="⏹️ Stop Recording",
-
-    key="voice"
+    key="voice",
 )
 
 if audio:
 
-    with st.spinner("Transcribing..."):
+    with st.spinner("Converting speech to text..."):
 
-        voice_text = speech_to_text(
-            audio["bytes"]
-        )
+        voice_text = speech_to_text(audio["bytes"])
 
-    st.success("Voice converted to text!")
+    st.success("Voice recognized!")
 
-    st.write("You asked:")
-
+    st.write("### 🗣️ You asked:")
     st.write(voice_text)
 
     if st.session_state.chatbot:
 
-        with st.spinner("Thinking..."):
+        with st.spinner("Searching Resume & Job Description..."):
 
             answer = st.session_state.chatbot.ask(
                 voice_text
             )
 
+        st.write("### 🤖 AI Career Assistant")
         st.write(answer)
 
-    text = speech_to_text(audio["bytes"])
-
-    st.write("You said:")
-
-    st.write(text)
-
-    if st.session_state.chatbot:
-
-        answer = st.session_state.chatbot.ask(text)
-
-        st.write(answer)
-
-
-    with st.spinner("Listening..."):
-
-        voice_text = speech_to_text()
-
-
-    if voice_text:
-
-        st.write(
-            "You asked:",
-            voice_text
+        st.session_state.messages.append(
+            {
+                "user": voice_text,
+                "ai": answer
+            }
         )
 
+    else:
 
-        if st.session_state.chatbot:
-
-
-            answer = st.session_state.chatbot.ask(
-                voice_text
-            )
-
-
-            st.write(
-                answer
-            )
-
+        st.warning(
+            "Please upload documents and click Analyze Documents first."
+        )
 
 
 # -----------------------------
