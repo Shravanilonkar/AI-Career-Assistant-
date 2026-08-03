@@ -2,7 +2,7 @@ import streamlit as st
 from langchain_groq import ChatGroq
 
 
-def get_llm():
+def load_llm():
     llm = ChatGroq(
         model="llama-3.1-8b-instant",
         temperature=0,
