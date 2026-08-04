@@ -265,6 +265,7 @@ if st.session_state.interview:
 
 
 
+
     with st.spinner("Converting speech to text..."):
 
         voice_text = speech_to_text(audio["bytes"])
@@ -384,3 +385,36 @@ audio = mic_recorder(
 )
 
 if audio:
+
+    with st.spinner("Converting speech to text..."):
+
+        voice_text = speech_to_text(audio["bytes"])
+
+    st.success("Voice recognized!")
+
+    st.write("### 🗣️ You asked:")
+    st.write(voice_text)
+
+    if st.session_state.chatbot:
+
+        with st.spinner("Searching Resume & Job Description..."):
+
+            answer = st.session_state.chatbot.ask(
+                voice_text
+            )
+
+        st.write("### 🤖 AI Career Assistant")
+        st.write(answer)
+
+        st.session_state.messages.append(
+            {
+                "user": voice_text,
+                "ai": answer
+            }
+        )
+
+    else:
+
+        st.warning(
+            "Please upload documents and click Analyze Documents first."
+        )
