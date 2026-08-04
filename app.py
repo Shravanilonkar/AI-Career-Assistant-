@@ -265,22 +265,6 @@ if st.session_state.interview:
 
 
 
-# -----------------------------
-# Voice Input
-# -----------------------------
-
-
-
-st.header("🎤 Voice Question")
-
-audio = mic_recorder(
-    start_prompt="🎙️ Start Recording",
-    stop_prompt="⏹️ Stop Recording",
-    key="voice",
-)
-
-if audio:
-
     with st.spinner("Converting speech to text..."):
 
         voice_text = speech_to_text(audio["bytes"])
@@ -384,3 +368,19 @@ else:
     st.info(
         "Upload documents and click Analyze Documents first."
     )
+
+# -----------------------------
+# Voice Input
+# -----------------------------
+
+
+
+st.header("🎤 Voice Question")
+
+audio = mic_recorder(
+    start_prompt="🎙️ Start Recording",
+    stop_prompt="⏹️ Stop Recording",
+    key="voice",
+)
+
+if audio:
