@@ -269,21 +269,15 @@ if st.session_state.interview:
 # Voice Input
 # -----------------------------
 
-
-
 st.header("🎤 Voice Question")
 
-audio = mic_recorder(
-    start_prompt="🎙️ Start Recording",
-    stop_prompt="⏹️ Stop Recording",
-    key="voice",
-)
+audio_file = st.audio_input("Click to record your question")
 
-if audio:
+if audio_file is not None:
 
     with st.spinner("Converting speech to text..."):
 
-        voice_text = speech_to_text(audio["bytes"])
+        voice_text = speech_to_text(audio_file)
 
     st.success("Voice recognized!")
 
@@ -294,9 +288,7 @@ if audio:
 
         with st.spinner("Searching Resume & Job Description..."):
 
-            answer = st.session_state.chatbot.ask(
-                voice_text
-            )
+            answer = st.session_state.chatbot.ask(voice_text)
 
         st.write("### 🤖 AI Career Assistant")
         st.write(answer)
@@ -310,10 +302,7 @@ if audio:
 
     else:
 
-        st.warning(
-            "Please upload documents and click Analyze Documents first."
-        )
-
+        st.warning("Please upload documents and click Analyze Documents first.")
 
 # -----------------------------
 # Chat Section
