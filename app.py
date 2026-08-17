@@ -1,21 +1,17 @@
 import streamlit as st
 from streamlit_mic_recorder import mic_recorder
+
 from file_handler import save_uploaded_file
 from document_processor import extract_document_text
-
 from text_splitter import split_text
-
 from embeddings import load_embedding_model
 from vector_store import create_vector_store
-
 from llm import load_llm
 from chatbot import create_chatbot
-
 from resume_analyzer import analyze_resume
 from interview_generator import generate_interview_questions
-
 from speech_to_text import speech_to_text
-from streamlit_mic_recorder import mic_recorder
+
 
 # -----------------------------
 # Page Configuration
@@ -86,25 +82,13 @@ Upload:
 
 resume_file = st.file_uploader(
     "📄 Upload Resume",
-    type=[
-        "pdf",
-        "png",
-        "jpg",
-        "jpeg"
-    ]
+    type=["pdf", "png", "jpg", "jpeg"]
 )
-
 
 job_file = st.file_uploader(
     "📄 Upload Job Description",
-    type=[
-        "pdf",
-        "png",
-        "jpg",
-        "jpeg"
-    ]
+    type=["pdf", "png", "jpg", "jpeg"]
 )
-
 
 
 # -----------------------------
@@ -113,18 +97,15 @@ job_file = st.file_uploader(
 
 if st.button("🚀 Analyze Documents"):
 
-
     if resume_file is None or job_file is None:
 
         st.warning(
             "Please upload both Resume and Job Description."
         )
 
-
     else:
 
         with st.spinner("Processing documents..."):
-
 
             # Save files
 
@@ -143,24 +124,17 @@ if st.button("🚀 Analyze Documents"):
                 resume_path
             )
 
-
             job_text = extract_document_text(
                 job_path
             )
 
 
+            # Combine documents
+
             complete_text = (
-
                 resume_text
-
-                +
-
-                "\n\n"
-
-                +
-
-                job_text
-
+                + "\n\n"
+                + job_text
             )
 
 
@@ -189,7 +163,7 @@ if st.button("🚀 Analyze Documents"):
             llm = load_llm()
 
 
-            # Chatbot
+            # Create chatbot
 
             chatbot = create_chatbot(
                 llm,
@@ -200,10 +174,13 @@ if st.button("🚀 Analyze Documents"):
             st.session_state.chatbot = chatbot
 
 
-
+        # -----------------------------
         # Resume Analysis
+        # -----------------------------
 
-        with st.spinner("Generating Resume Analysis..."):
+        with st.spinner(
+            "Generating Resume Analysis..."
+        ):
 
             analysis = analyze_resume(
                 chatbot
@@ -211,11 +188,16 @@ if st.button("🚀 Analyze Documents"):
 
             st.session_state.analysis = analysis
 
+            chatbot.analysis = analysis
 
 
+        # -----------------------------
         # Interview Questions
+        # -----------------------------
 
-        with st.spinner("Generating Interview Questions..."):
+        with st.spinner(
+            "Generating Interview Questions..."
+        ):
 
             interview = generate_interview_questions(
                 chatbot
@@ -223,12 +205,12 @@ if st.button("🚀 Analyze Documents"):
 
             st.session_state.interview = interview
 
+            chatbot.interview = interview
 
 
         st.success(
             "Documents processed successfully!"
         )
-
 
 
 # -----------------------------
@@ -237,14 +219,11 @@ if st.button("🚀 Analyze Documents"):
 
 if st.session_state.analysis:
 
-
     st.header("📊 Resume Analysis")
-
 
     st.write(
         st.session_state.analysis
     )
-
 
 
 # -----------------------------
@@ -253,79 +232,117 @@ if st.session_state.analysis:
 
 if st.session_state.interview:
 
-
-    st.header(
-        "🎯 Interview Questions"
-    )
-
+    st.header("🎯 Interview Questions")
 
     st.write(
         st.session_state.interview
     )
 
 
-
-# -----------------------------
-# Voice Input
-# -----------------------------
-
-
+# ============================================================
+# VOICE INPUT
+# ============================================================
 
 st.header("🎤 Voice Question")
 
 audio = mic_recorder(
     start_prompt="🎙️ Start Recording",
     stop_prompt="⏹️ Stop Recording",
-    key="voice",
+    key="voice"
 )
+
 
 if audio:
 
-    with st.spinner("Converting speech to text..."):
+    with st.spinner(
+        "Converting speech to text..."
+    ):
 
-        voice_text = speech_to_text(audio["bytes"])
+        voice_text = speech_to_text(
+            audio["bytes"]
+        )
 
-    st.success("Voice recognized!")
 
-    st.write("### 🗣️ You asked:")
-    st.write(voice_text)
+    if voice_text:
 
-    if st.session_state.chatbot:
+        st.success("Voice recognized!")
 
-        with st.spinner("Searching Resume & Job Description..."):
+        st.write("### 🗣️ You asked:")
+        st.write(voice_text)
 
-            answer = st.session_state.chatbot.ask(
-                voice_text
+
+        if st.session_state.chatbot:
+
+            with st.spinner(
+                "Searching Resume & Analysis..."
+            ):
+
+                # Add analysis and interview information
+                # to the voice question
+
+                extra_context = ""
+
+                if st.session_state.analysis:
+
+                    extra_context += (
+                        "\n\nRESUME ANALYSIS:\n"
+                        + st.session_state.analysis
+                    )
+
+                if st.session_state.interview:
+
+                    extra_context += (
+                        "\n\nINTERVIEW QUESTIONS:\n"
+                        + st.session_state.interview
+                    )
+
+
+                combined_question = (
+                    voice_text
+                    + extra_context
+                )
+
+
+                answer = st.session_state.chatbot.ask(
+                    combined_question
+                )
+
+
+            st.write(
+                "### 🤖 AI Career Assistant"
             )
 
-        st.write("### 🤖 AI Career Assistant")
-        st.write(answer)
+            st.write(answer)
 
-        st.session_state.messages.append(
-            {
-                "user": voice_text,
-                "ai": answer
-            }
-        )
+
+            st.session_state.messages.append(
+                {
+                    "user": voice_text,
+                    "ai": answer
+                }
+            )
+
+        else:
+
+            st.warning(
+                "Please upload documents and click Analyze Documents first."
+            )
 
     else:
 
         st.warning(
-            "Please upload documents and click Analyze Documents first."
+            "Could not understand the audio. Please try again."
         )
 
 
-# -----------------------------
-# Chat Section
-# -----------------------------
+# ============================================================
+# CHAT SECTION
+# ============================================================
 
-st.header(
-    "💬 Chat With Resume"
-)
+st.header("💬 Chat With Resume")
 
 
 if st.session_state.chatbot:
-
 
     question = st.text_input(
         "Ask something about your Resume"
@@ -334,15 +351,42 @@ if st.session_state.chatbot:
 
     if st.button("Ask AI"):
 
-
         if question:
 
+            with st.spinner(
+                "Thinking..."
+            ):
 
-            with st.spinner("Thinking..."):
+                # Include generated analysis in the
+                # chatbot's available information
+
+                extra_context = ""
+
+
+                if st.session_state.analysis:
+
+                    extra_context += (
+                        "\n\nRESUME ANALYSIS:\n"
+                        + st.session_state.analysis
+                    )
+
+
+                if st.session_state.interview:
+
+                    extra_context += (
+                        "\n\nINTERVIEW QUESTIONS:\n"
+                        + st.session_state.interview
+                    )
+
+
+                combined_question = (
+                    question
+                    + extra_context
+                )
 
 
                 answer = st.session_state.chatbot.ask(
-                    question
+                    combined_question
                 )
 
 
@@ -354,24 +398,19 @@ if st.session_state.chatbot:
             )
 
 
-
-    # Show History
+    # -----------------------------
+    # Chat History
+    # -----------------------------
 
     for chat in st.session_state.messages:
 
-
-        st.markdown(
-            "### 👤 You"
-        )
+        st.markdown("### 👤 You")
 
         st.write(
             chat["user"]
         )
 
-
-        st.markdown(
-            "### 🤖 AI"
-        )
+        st.markdown("### 🤖 AI")
 
         st.write(
             chat["ai"]
@@ -380,9 +419,6 @@ if st.session_state.chatbot:
 
 else:
 
-
     st.info(
         "Upload documents and click Analyze Documents first."
     )
-
-
