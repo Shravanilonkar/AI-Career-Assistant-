@@ -422,3 +422,67 @@ else:
     st.info(
         "Upload documents and click Analyze Documents first."
     )
+
+
+# -----------------------------
+# Job Recommendations
+# -----------------------------
+
+st.header("💼 Job Recommendations")
+
+job_keyword = st.text_input(
+    "Enter a job title",
+    placeholder="Example: Python Developer"
+)
+
+location = st.text_input(
+    "Enter location",
+    value="India"
+)
+
+if st.button("🔎 Search Jobs"):
+
+    if job_keyword:
+
+        with st.spinner("Searching jobs..."):
+
+            from api.fusion import create_fusion_data
+
+            jobs_df = create_fusion_data(
+                job_keyword,
+                location
+            )
+
+        if not jobs_df.empty:
+
+            st.success(
+                f"Found {len(jobs_df)} jobs"
+            )
+
+            st.dataframe(
+                jobs_df,
+                use_container_width=True
+            )
+
+            csv = jobs_df.to_csv(
+                index=False
+            )
+
+            st.download_button(
+                "⬇️ Download Fusion Dataset",
+                csv,
+                "fusion_jobs.csv",
+                "text/csv"
+            )
+
+        else:
+
+            st.warning(
+                "No jobs found."
+            )
+
+    else:
+
+        st.warning(
+            "Please enter a job title."
+        )
