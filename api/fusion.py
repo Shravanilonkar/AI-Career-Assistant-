@@ -1,30 +1,48 @@
 import pandas as pd
-from pathlib import Path
+
+from api.adzuna_api import search_adzuna_jobs
+from api.muse_api import search_muse_jobs
 
 
-def create_fusion_data(adzuna_data=None, muse_data=None):
+def create_fusion_data(job_keyword, location):
 
-    dataframes = []
+    # Call Adzuna API
+    adzuna_data = search_adzuna_jobs(
+        job_keyword,
+        location
+    )
 
-    # Adzuna data
-    if adzuna_data:
+    # Call The Muse API
+    muse_data = search_muse_jobs(
+        job_keyword,
+        location
+    )
+
+    # Convert API results into DataFrames
+
+    if isinstance(adzuna_data, list):
         adzuna_df = pd.DataFrame(adzuna_data)
-        dataframes.append(adzuna_df)
+    else:
+        adzuna_df = pd.DataFrame()
 
-    # The Muse data
-    if muse_data:
+    if isinstance(muse_data, list):
         muse_df = pd.DataFrame(muse_data)
-        dataframes.append(muse_df)
+    else:
+        muse_df = pd.DataFrame()
 
-    # If API data is available
-    if dataframes:
+    # Combine both API results
 
-        combined_df = pd.concat(
-            dataframes,
-            ignore_index=True
-        )
+    combined_df = pd.concat(
+        [
+            adzuna_df,
+            muse_df
+        ],
+        ignore_index=True
+    )
 
-        return combined_df.drop_duplicates()
+    # Remove duplicate jobs
 
-    # Otherwise return empty DataFrame
-    return pd.DataFrame()
+    if not combined_df.empty:
+        combined_df = combined_df.drop_duplicates()
+
+    return combined_df
