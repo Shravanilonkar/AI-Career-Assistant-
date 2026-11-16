@@ -1,6 +1,6 @@
 """Upload & Analyze: your original pipeline, unchanged, on its own page."""
 import streamlit as st
-
+import time
 import theme
 from core import docs_ready
 
@@ -34,31 +34,118 @@ def render():
         from text_splitter import split_text
         from vector_store import create_vector_store
 
-        with st.status("Processing documents...", expanded=True) as status:
-            st.write("Reading files")
-            resume_text = extract_document_text(save_uploaded_file(resume_file))
-            job_text = extract_document_text(save_uploaded_file(job_file))
+        
+    
 
-            st.write("Building search index")
-            chunks = split_text(resume_text + "\n\n" + job_text)
-            vector_store = create_vector_store(chunks, load_embedding_model())
-            chatbot = create_chatbot(load_llm(), vector_store)
+    def run_step(name, function, *args):
+    start = time.time()
 
-            st.write("Generating resume analysis")
-            analysis = analyze_resume(chatbot, resume_text, job_text)
-            chatbot.analysis = analysis
+    st.write(f"⏳ {name} started...")
 
-            st.write("Generating interview questions")
-            interview = generate_interview_questions(chatbot)
-            chatbot.interview = interview
+    result = function(*args)
 
-            ss = st.session_state
-            ss.chatbot, ss.analysis, ss.interview = chatbot, analysis, interview
-            ss.resume_text, ss.job_text = str(resume_text or ""), str(job_text or "")
-            ss.resume_name, ss.job_name = resume_file.name, job_file.name
-            ss.messages = []
-            status.update(label="Documents processed successfully!", state="complete")
-        st.rerun()
+    elapsed = time.time() - start
+
+    st.write(f"✅ {name} completed in {elapsed:.2f} seconds")
+
+    return result
+
+
+    with st.status("Processing documents...", expanded=True) as status:
+
+    resume_path = run_step(
+        "Saving resume",
+        save_uploaded_file,
+        resume_file
+    )
+
+    job_path = run_step(
+        "Saving job description",
+        save_uploaded_file,
+        job_file
+    )
+
+    resume_text = run_step(
+        "Extracting resume text",
+        extract_document_text,
+        resume_path
+    )
+
+    job_text = run_step(
+        "Extracting job description text",
+        extract_document_text,
+        job_path
+    )
+
+    st.write(f"Resume characters: {len(resume_text)}")
+    st.write(f"Job description characters: {len(job_text)}")
+
+    chunks = run_step(
+        "Splitting documents",
+        split_text,
+        resume_text + "\n\n" + job_text
+    )
+
+    st.write(f"Total chunks: {len(chunks)}")
+
+    embedding_model = run_step(
+        "Loading embedding model",
+        load_embedding_model
+    )
+
+    vector_store = run_step(
+        "Creating FAISS database",
+        create_vector_store,
+        chunks,
+        embedding_model
+    )
+
+    llm = run_step(
+        "Loading Groq model",
+        load_llm
+    )
+
+    chatbot = create_chatbot(llm, vector_store)
+
+    analysis = run_step(
+        "Generating resume analysis",
+        analyze_resume,
+        chatbot,
+        resume_text,
+        job_text
+    )
+
+    chatbot.analysis = analysis
+
+    interview = run_step(
+        "Generating interview questions",
+        generate_interview_questions,
+        chatbot
+    )
+
+    chatbot.interview = interview
+
+    ss = st.session_state
+
+    ss.chatbot = chatbot
+    ss.analysis = analysis
+    ss.interview = interview
+
+    ss.resume_text = str(resume_text or "")
+    ss.job_text = str(job_text or "")
+
+    ss.resume_name = resume_file.name
+    ss.job_name = job_file.name
+
+    ss.messages = []
+
+    status.update(
+        label="Documents processed successfully!",
+        state="complete"
+    )
+
+    st.rerun()
+
 
     if docs_ready():
         with st.expander("Preview extracted text"):
