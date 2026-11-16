@@ -45,7 +45,7 @@ def render():
             chatbot = create_chatbot(load_llm(), vector_store)
 
             st.write("Generating resume analysis")
-            analysis = analyze_resume(chatbot)
+            analysis = analyze_resume(chatbot, resume_text, job_text)
             chatbot.analysis = analysis
 
             st.write("Generating interview questions")

@@ -1,34 +1,55 @@
-def analyze_resume(chatbot):
+
+def analyze_resume(chatbot, resume_text, job_text):
     """
-    Analyze Resume and Job Description.
+    Analyze resume directly against the job description.
+    Avoid unnecessary FAISS retrieval for this operation.
     """
 
-    prompt = """
-You are an expert HR Recruiter.
+    prompt = f"""
+You are an experienced HR recruiter and ATS specialist.
 
-Analyze the uploaded Resume and Job Description.
+Analyze the candidate's resume against the job description.
 
-Give your answer in the following format.
+RESUME:
+{resume_text[:12000]}
 
-Resume Summary
+JOB DESCRIPTION:
+{job_text[:12000]}
 
-ATS Score (Out of 100)
+Provide the analysis in the following format:
 
-Matching Skills
+1. RESUME SUMMARY
+Summarize the candidate's education, experience and skills.
 
-Missing Skills
+2. ATS SCORE (OUT OF 100)
+Give an estimated score based on the job requirements.
+Briefly explain the score.
 
-Strengths
+3. MATCHING SKILLS
+List skills present in both the resume and job description.
 
-Weaknesses
+4. MISSING SKILLS
+List important job requirements missing from the resume.
 
-Resume Improvement Suggestions
+5. STRENGTHS
+Identify the candidate's strongest qualifications.
 
-Career Roadmap for next 3 months
+6. WEAKNESSES
+Identify gaps relevant to this particular job.
 
-Keep the answer short and professional.
+7. RESUME IMPROVEMENT SUGGESTIONS
+Give practical suggestions to improve the resume.
+
+8. CAREER ROADMAP FOR NEXT 3 MONTHS
+Provide a short, practical monthly learning plan.
+
+IMPORTANT:
+- Use only information from the supplied documents.
+- Do not invent qualifications, experience or projects.
+- Keep the answer concise and professional.
+- Clearly distinguish between skills demonstrated and skills merely mentioned.
 """
 
-    answer = chatbot.ask(prompt)
+    response = chatbot.llm.invoke(prompt)
 
-    return answer
+    return response.content
